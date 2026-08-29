@@ -3,7 +3,9 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { createAdminClient } from "@/lib/supabase/server";
 import { calculatePendingFees } from "@/lib/fees-utils";
-import { recalculateAdmissionBalance } from "@/lib/fee-ledger";
+import { classifyLegacyPaymentKinds, recalculateAdmissionBalance } from "@/lib/fee-ledger";
+
+export const dynamic = "force-dynamic";
 
 async function getRole() {
   const supabase = createAdminClient();
@@ -51,9 +53,10 @@ export async function POST(req: Request) {
     if (role !== Role.ADMIN) return new NextResponse("Only administrators can confirm reconciliation", { status: 403 });
     const body = await req.json().catch(() => ({}));
     if (body.confirm !== true) return new NextResponse("Send { confirm: true } to apply reconciliation", { status: 400 });
+    const classified = await classifyLegacyPaymentKinds();
     const rows = await preview();
     for (const row of rows) await recalculateAdmissionBalance(row.admissionId);
-    return NextResponse.json({ success: true, updated: rows.length });
+    return NextResponse.json({ success: true, updated: rows.length, classified });
   } catch (error) {
     console.error("[FEES_RECONCILIATION_POST]", error);
     return new NextResponse("Internal Error", { status: 500 });

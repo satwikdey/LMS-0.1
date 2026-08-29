@@ -6,6 +6,8 @@ import { AccountAuditAction } from "@prisma/client";
 import { getPasswordResetRedirect } from "@/lib/app-url";
 import { recordAccountAudit } from "@/lib/account-audit";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
     try {
         const supabase = createAdminClient();
@@ -106,7 +108,32 @@ export async function GET(req: Request) {
             },
         });
 
-        return NextResponse.json(teachers);
+        const authUsers = new Map<string, any>();
+        try {
+            const { data, error: authListError } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+            if (!authListError) {
+                data.users.forEach((authUser) => authUsers.set(authUser.id, authUser));
+            } else {
+                console.warn("[TEACHERS_GET] Supabase auth status unavailable:", authListError.message);
+            }
+        } catch (authStatusError) {
+            console.warn("[TEACHERS_GET] Supabase auth status error:", authStatusError);
+        }
+
+        const withAuthStatus = teachers.map((teacher) => {
+            const authUser = authUsers.get(teacher.id);
+            return {
+                ...teacher,
+                authStatus: authUser ? {
+                    exists: true,
+                    confirmed: Boolean(authUser.confirmed_at || authUser.email_confirmed_at),
+                    bannedUntil: authUser.banned_until || null,
+                    lastSignInAt: authUser.last_sign_in_at || null,
+                } : { exists: false },
+            };
+        });
+
+        return NextResponse.json(withAuthStatus);
 
     } catch (error) {
         console.log("[TEACHERS_GET]", error);

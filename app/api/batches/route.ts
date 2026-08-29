@@ -5,6 +5,8 @@ import { Role } from "@prisma/client";
 import { WhatsAppService } from "@/lib/whatsapp-service";
 import { recalculateAdmissionBalance } from "@/lib/fee-ledger";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
     try {
         const supabase = createAdminClient();
@@ -36,15 +38,15 @@ export async function GET(req: Request) {
 
         if (!studentId) return NextResponse.json(batches);
 
-        const existingSubjects = new Set(
+        const existingBatchIds = new Set(
             (await db.admission.findMany({
                 where: { studentId, status: "ACTIVE", batchId: { not: null } },
-                include: { batch: { select: { subject: true } } },
+                select: { batchId: true },
             }))
-                .map((admission) => admission.batch?.subject.trim().toLowerCase())
+                .map((admission) => admission.batchId)
                 .filter(Boolean),
         );
-        return NextResponse.json(batches.filter((batch) => !existingSubjects.has(batch.subject.trim().toLowerCase())));
+        return NextResponse.json(batches.filter((batch) => !existingBatchIds.has(batch.id)));
 
     } catch (error) {
         // Log full error for Vercel/server debugging (visible in Vercel Functions log)

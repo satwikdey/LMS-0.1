@@ -25,6 +25,9 @@ export async function GET(req: Request) {
                     }
                 },
                 admissions: {
+                    where: {
+                        status: "ACTIVE",
+                    },
                     include: {
                         batch: {
                             select: {

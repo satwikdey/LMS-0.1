@@ -51,6 +51,16 @@ export default function TeachersPage() {
   const [qualificationFilter, setQualificationFilter] = useState<string>("all");
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
 
+  const getAuthStatus = (teacher: any) => {
+    const status = teacher.authStatus;
+    if (!status) return { label: "Unknown", className: "bg-slate-100 text-slate-700 hover:bg-slate-100" };
+    if (!status.exists) return { label: "Auth Missing", className: "bg-red-100 text-red-700 hover:bg-red-100" };
+    if (status.bannedUntil && new Date(status.bannedUntil) > new Date()) return { label: "Banned", className: "bg-red-100 text-red-700 hover:bg-red-100" };
+    if (!status.confirmed) return { label: "Unconfirmed", className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100" };
+    if (!status.lastSignInAt) return { label: "Never Signed In", className: "bg-blue-100 text-blue-800 hover:bg-blue-100" };
+    return { label: "Ready", className: "bg-green-100 text-green-800 hover:bg-green-100" };
+  };
+
   const fetchTeachers = useCallback(async () => {
     try {
       const response = await fetch("/api/teachers");
@@ -230,6 +240,27 @@ export default function TeachersPage() {
     }
   };
 
+  const handleSetTemporaryPassword = async (teacher: any) => {
+    const password = window.prompt(`Set a temporary password for ${teacher.email}`);
+    if (password === null) return;
+    if (password.length < 6) {
+      toast({ title: "Password too short", description: "Temporary password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${teacher.id}/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "temporary_password", password }),
+      });
+      if (!response.ok) throw new Error((await response.text()) || "Failed to set temporary password");
+      toast({ title: "Temporary password set", description: `${teacher.email} can now sign in with the new password.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to set temporary password", variant: "destructive" });
+    }
+  };
+
   const handleDeleteClick = (teacher: any) => {
     setDeletingTeacher(teacher);
     setDeleteOpen(true);
@@ -330,6 +361,7 @@ export default function TeachersPage() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Account</TableHead>
               <TableHead>Qualifications</TableHead>
               <TableHead>Subjects</TableHead>
               <TableHead>Experience</TableHead>
@@ -340,7 +372,7 @@ export default function TeachersPage() {
           <TableBody>
             {teacherList.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12">
+                <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Users className="h-10 w-10 opacity-50" />
                     <p className="text-sm font-medium">
@@ -361,6 +393,9 @@ export default function TeachersPage() {
                 <TableRow key={teacher.id} className="hover:bg-muted/50">
                   <TableCell className="font-medium">{teacher.name}</TableCell>
                   <TableCell>{teacher.email}</TableCell>
+                  <TableCell>
+                    <Badge className={getAuthStatus(teacher).className}>{getAuthStatus(teacher).label}</Badge>
+                  </TableCell>
                   <TableCell>{teacher.teacherProfile?.qualifications || "-"}</TableCell>
                   <TableCell>{teacher.teacherProfile?.subjects_specialization || "-"}</TableCell>
                   <TableCell>{teacher.teacherProfile?.experience_years || 0} years</TableCell>
@@ -382,6 +417,10 @@ export default function TeachersPage() {
                             <DropdownMenuItem onClick={() => handleSendResetLink(teacher)}>
                               <KeyRound className="mr-2 h-4 w-4" />
                               Send Reset Link
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleSetTemporaryPassword(teacher)}>
+                              <KeyRound className="mr-2 h-4 w-4" />
+                              Set Temporary Password
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -432,6 +471,7 @@ export default function TeachersPage() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm truncate">{teacher.name}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">{teacher.email}</p>
+                    <Badge className={`mt-2 ${getAuthStatus(teacher).className}`}>{getAuthStatus(teacher).label}</Badge>
                   </div>
 <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -449,6 +489,10 @@ export default function TeachersPage() {
                             <DropdownMenuItem onClick={() => handleSendResetLink(teacher)}>
                               <KeyRound className="mr-2 h-4 w-4" />
                               Send Reset Link
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleSetTemporaryPassword(teacher)}>
+                              <KeyRound className="mr-2 h-4 w-4" />
+                              Set Temporary Password
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem

@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { calculatePendingFees, getMonthsBetween } from "@/lib/fees-utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const supabase = createAdminClient();
@@ -23,7 +25,7 @@ export async function GET(req: Request) {
     const admissions = await db.admission.findMany({
       where: {
         studentId,
-        status: { in: ["ACTIVE", "COMPLETED"] },
+        status: "ACTIVE",
         batch: {
           feeModel: { in: ["MONTHLY", "QUARTERLY"] },
         },

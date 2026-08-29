@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { Role } from "@prisma/client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
     req: Request,
     { params }: { params: { id: string } }
@@ -36,6 +38,7 @@ export async function GET(
         const admissions = await db.admission.findMany({
             where: {
                 batchId: id,
+                status: "ACTIVE",
             },
             include: {
                 student: {
@@ -46,6 +49,19 @@ export async function GET(
                                 email: true,
                                 image: true,
                                 is_active: true
+                            }
+                        },
+                        admissions: {
+                            where: { status: "ACTIVE" },
+                            include: {
+                                batch: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        subject: true,
+                                        isActive: true,
+                                    }
+                                }
                             }
                         }
                     }
@@ -61,7 +77,24 @@ export async function GET(
             phone: admission.student.phone,
             isActive: admission.student.user.is_active,
             parentName: admission.student.fatherName, // Mapped for frontend compatibility
-            joinDate: admission.admission_date
+            joinDate: admission.admission_date,
+            batches: admission.student.admissions
+                .filter((adm) => adm.batch)
+                .map((adm) => ({
+                    id: adm.batch!.id,
+                    name: adm.batch!.name,
+                    subject: adm.batch!.subject,
+                    isActive: adm.batch!.isActive,
+                })),
+            admissions: admission.student.admissions.map((adm) => ({
+                id: adm.id,
+                batchId: adm.batchId,
+                batch: adm.batch ? {
+                    name: adm.batch.name,
+                    subject: adm.batch.subject,
+                    isActive: adm.batch.isActive,
+                } : null,
+            })),
         }));
 
         return NextResponse.json(students);

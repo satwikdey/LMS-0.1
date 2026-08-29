@@ -306,11 +306,6 @@ export default function AdmissionPage() {
             return;
         }
 
-        if (selectedBatches.some((selected) => selected.subject.trim().toLowerCase() === b.subject.trim().toLowerCase())) {
-            toast({ title: "Subject already selected", description: "A student can have only one active batch per subject.", variant: "destructive" });
-            return;
-        }
-
         setSelectedBatches(prev => [...prev, {
             id: tempBatchId,
             name: b.name,
@@ -1118,7 +1113,7 @@ export default function AdmissionPage() {
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         {batches.filter((b) => !selectedBatches.some((sb) =>
-                                                            sb.id === b.id || sb.subject.trim().toLowerCase() === b.subject.trim().toLowerCase()
+                                                            sb.id === b.id
                                                         )).map(b => (
                                                             <SelectItem key={b.id} value={b.id} className="py-3">
                                                                 <div className="flex flex-col text-left gap-0.5">

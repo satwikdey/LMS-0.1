@@ -35,6 +35,16 @@ export default function AdminReceptionistsPage() {
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState("");
 
+  const getAuthStatus = (receptionist: any) => {
+    const status = receptionist.authStatus;
+    if (!status) return { label: "Unknown", className: "bg-slate-100 text-slate-700 hover:bg-slate-100" };
+    if (!status.exists) return { label: "Auth Missing", className: "bg-red-100 text-red-700 hover:bg-red-100" };
+    if (status.bannedUntil && new Date(status.bannedUntil) > new Date()) return { label: "Banned", className: "bg-red-100 text-red-700 hover:bg-red-100" };
+    if (!status.confirmed) return { label: "Unconfirmed", className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100" };
+    if (!status.lastSignInAt) return { label: "Never Signed In", className: "bg-blue-100 text-blue-800 hover:bg-blue-100" };
+    return { label: "Ready", className: "bg-green-100 text-green-800 hover:bg-green-100" };
+  };
+
   const fetchReceptionists = useCallback(async () => {
     try {
       const response = await fetch("/api/receptionists");
@@ -208,6 +218,27 @@ export default function AdminReceptionistsPage() {
     }
   };
 
+  const handleSetTemporaryPassword = async (receptionist: any) => {
+    const password = window.prompt(`Set a temporary password for ${receptionist.email}`);
+    if (password === null) return;
+    if (password.length < 6) {
+      toast({ title: "Password too short", description: "Temporary password must be at least 6 characters.", variant: "destructive" });
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${receptionist.id}/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "temporary_password", password }),
+      });
+      if (!response.ok) throw new Error((await response.text()) || "Failed to set temporary password");
+      toast({ title: "Temporary password set", description: `${receptionist.email} can now sign in with the new password.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to set temporary password", variant: "destructive" });
+    }
+  };
+
   const handleDeleteClick = (receptionist: any) => {
     setDeletingReceptionist(receptionist);
     setDeleteOpen(true);
@@ -272,16 +303,17 @@ export default function AdminReceptionistsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Joined</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Account</TableHead>
+                <TableHead>Joined</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {receptionistList.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-12">
+                <TableCell colSpan={6} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Users className="h-10 w-10 opacity-50" />
                     <p className="text-sm font-medium">
@@ -307,6 +339,9 @@ export default function AdminReceptionistsPage() {
                       {receptionist.is_active ? "Active" : "Archived"}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    <Badge className={getAuthStatus(receptionist).className}>{getAuthStatus(receptionist).label}</Badge>
+                  </TableCell>
                   <TableCell>{new Date(receptionist.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
@@ -326,6 +361,15 @@ export default function AdminReceptionistsPage() {
                             size="icon"
                             onClick={() => handleSendResetLink(receptionist)}
                             title="Send password reset link"
+                            className="h-8 w-8"
+                          >
+                            <KeyRound className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleSetTemporaryPassword(receptionist)}
+                            title="Set temporary password"
                             className="h-8 w-8"
                           >
                             <KeyRound className="h-4 w-4" />
@@ -393,6 +437,7 @@ export default function AdminReceptionistsPage() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm truncate">{receptionist.name}</h3>
                     <p className="text-xs text-muted-foreground mt-0.5">{receptionist.email}</p>
+                    <Badge className={`mt-2 ${getAuthStatus(receptionist).className}`}>{getAuthStatus(receptionist).label}</Badge>
                   </div>
                   <div className="flex gap-1">
                     {!isArchived ? (
@@ -411,6 +456,15 @@ export default function AdminReceptionistsPage() {
                           size="icon"
                           onClick={() => handleSendResetLink(receptionist)}
                           title="Send password reset link"
+                          className="h-8 w-8"
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleSetTemporaryPassword(receptionist)}
+                          title="Set temporary password"
                           className="h-8 w-8"
                         >
                           <KeyRound className="h-4 w-4" />

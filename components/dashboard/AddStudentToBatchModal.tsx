@@ -44,7 +44,6 @@ interface AddStudentToBatchModalProps {
     batches: Batch[];
     onSuccess: () => void;
     existingBatchIds?: string[];
-    existingSubjectKeys?: string[];
 }
 
 export function AddStudentToBatchModal({
@@ -55,7 +54,6 @@ export function AddStudentToBatchModal({
     batches,
     onSuccess,
     existingBatchIds = [],
-    existingSubjectKeys = [],
 }: AddStudentToBatchModalProps) {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
@@ -171,7 +169,6 @@ export function AddStudentToBatchModal({
                     amount: paidAmount,
                     mode: paymentMode,
                     receipt_no: receiptNo,
-                    skipFeesPendingUpdate: true
                 };
 
                 // Check if it's a recurring fee model
@@ -241,7 +238,7 @@ export function AddStudentToBatchModal({
                                     </SelectTrigger>
                                     <SelectContent>
                                         {batches
-                                            .filter(b => b.isActive !== false && !existingBatchIds.includes(b.id) && !existingSubjectKeys.includes(b.subject.trim().toLowerCase()))
+                                            .filter(b => b.isActive !== false && !existingBatchIds.includes(b.id))
                                             .map((batch) => (
                                                 <SelectItem key={batch.id} value={batch.id} className="py-3">
                                                     <div className="flex items-center gap-2">

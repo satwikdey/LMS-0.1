@@ -3,6 +3,8 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { calculatePendingFees, getMonthsBetween } from "@/lib/fees-utils";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const supabase = createAdminClient();
@@ -40,6 +42,10 @@ export async function GET(req: Request) {
       return new NextResponse("Admission has no batch", { status: 400 });
     }
 
+    if (admission.status !== "ACTIVE") {
+      return new NextResponse("Pending fees are only available for active admissions", { status: 400 });
+    }
+
     // Use the helper function to calculate pending fees
     const pendingData = await calculatePendingFees(
       {
@@ -70,9 +76,7 @@ export async function GET(req: Request) {
 
     // Determine calculation end date for response
     let calculationEndDate: Date;
-    if (admission.status === "WITHDRAWN" && admission.endDate) {
-      calculationEndDate = admission.endDate;
-    } else if (admission.batch.endDate) {
+    if (admission.batch.endDate) {
       calculationEndDate = admission.batch.endDate;
     } else if (!admission.batch.isActive) {
       calculationEndDate = admission.batch.updatedAt;

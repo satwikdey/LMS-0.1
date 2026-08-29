@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendTrackedAbsence } from "@/lib/notification-delivery";
 
+export const dynamic = "force-dynamic";
+
 const STAFF_ROLES = new Set([Role.TEACHER, Role.RECEPTIONIST, Role.ADMIN]);
 
 function parseDate(date: string) {
@@ -108,6 +110,7 @@ export async function GET(req: Request) {
       sessionId: session?.id || null,
       sessionType: session?.type || AttendanceSessionType.REGULAR,
       sessionLabel: session?.label || "Regular Class",
+      attendanceRecorded: attendanceMap.has(admission.student.id),
       // null is retained for the API; the new-attendance UI applies its
       // default-present policy without changing persisted history.
       isPresent: attendanceMap.has(admission.student.id) ? attendanceMap.get(admission.student.id) : null,
@@ -138,15 +141,52 @@ export async function POST(req: Request) {
       return new NextResponse("You are not authorized to take attendance for this batch", { status: 403 });
     }
 
+    const rosterStudentIds = (await db.admission.findMany({
+      where: { batchId, status: "ACTIVE" },
+      select: { studentId: true },
+    })).map((a) => a.studentId);
+    const studentIds = new Set(rosterStudentIds);
+    const submittedIds = attendanceData.map((record) => record?.studentId).filter(Boolean);
+    const uniqueSubmittedIds = new Set(submittedIds);
+
+    if (studentIds.size === 0) {
+      return new NextResponse("No active students found for this batch", { status: 400 });
+    }
+
+    if (uniqueSubmittedIds.size !== attendanceData.length || uniqueSubmittedIds.size !== studentIds.size) {
+      return NextResponse.json(
+        { message: "Attendance must include every active student exactly once", rosterCount: studentIds.size, submittedCount: uniqueSubmittedIds.size },
+        { status: 400 },
+      );
+    }
+
+    const invalidIds = Array.from(uniqueSubmittedIds).filter((studentId) => !studentIds.has(studentId));
+    if (invalidIds.length > 0) {
+      return NextResponse.json(
+        { message: "Attendance includes students who are not active in this batch", invalidIds },
+        { status: 400 },
+      );
+    }
+
+    const invalidStatus = attendanceData.find((record) => typeof record?.isPresent !== "boolean");
+    if (invalidStatus) {
+      return NextResponse.json(
+        { message: "Every attendance row must be marked present or absent", studentId: invalidStatus?.studentId },
+        { status: 400 },
+      );
+    }
+
     const type = sessionType === AttendanceSessionType.EXTRA ? AttendanceSessionType.EXTRA : AttendanceSessionType.REGULAR;
     const session = await getSession(batchId, attendanceDate, user.id, sessionId, type, sessionLabel);
-    const studentIds = new Set(
-      (await db.admission.findMany({ where: { batchId, status: "ACTIVE" }, select: { studentId: true } })).map((a) => a.studentId),
-    );
 
     for (const record of attendanceData) {
       const { studentId, isPresent } = record;
-      if (!studentId || typeof isPresent !== "boolean" || !studentIds.has(studentId)) continue;
+      if (typeof isPresent !== "boolean") {
+        return NextResponse.json(
+          { message: "Every attendance row must be marked present or absent", studentId },
+          { status: 400 },
+        );
+      }
 
       const attendance = await db.attendance.upsert({
         where: { sessionId_studentId: { sessionId: session.id, studentId } },
@@ -163,7 +203,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, session });
+    return NextResponse.json({ success: true, session, recordedCount: attendanceData.length, rosterCount: studentIds.size });
   } catch (error) {
     console.error("[ATTENDANCE_POST]", error);
     return new NextResponse(error instanceof Error ? error.message : "Internal Error", { status: 500 });

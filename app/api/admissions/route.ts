@@ -4,6 +4,8 @@ import { NextResponse } from "next/server";
 import { Role } from "@prisma/client";
 import { normalizeSubjectKey, recalculateAdmissionBalance } from "@/lib/fee-ledger";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
     try {
         const supabase = createAdminClient();
@@ -34,13 +36,13 @@ export async function POST(req: Request) {
                 where: {
                     studentId,
                     status: "ACTIVE",
-                    activeSubjectKey,
+                    batchId,
                 },
                 include: { batch: { select: { name: true, subject: true } } },
             });
             if (duplicate) {
                 return new NextResponse(
-                    `Student is already enrolled in the ${duplicate.batch?.subject || "selected"} subject (${duplicate.batch?.name || "another batch"}). Resolve the existing enrollment before adding another batch.`,
+                    `Student is already enrolled in ${duplicate.batch?.name || "this batch"}.`,
                     { status: 409 },
                 );
             }

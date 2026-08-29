@@ -55,6 +55,7 @@ interface StudentAttendance {
   email: string;
   phone: string | null;
   parentName: string | null;
+  attendanceRecorded?: boolean;
   isPresent: boolean | null;
 }
 
@@ -230,7 +231,9 @@ const AttendanceComponent = ({
 
   const teacherTargetsForDisplay = useMemo(() => teacherAttendanceTargets.filter((target) => {
     const state = teacherBatchStates[target.attendanceKey];
-    return !state || state.loading || state.students.length > 0;
+    if (!state || state.loading) return true;
+    if (state.students.length === 0) return false;
+    return !state.students.every((student) => student.attendanceRecorded);
   }), [teacherAttendanceTargets, teacherBatchStates]);
 
   useEffect(() => {
@@ -517,9 +520,12 @@ const AttendanceComponent = ({
       }
 
       const result = await response.json();
+      const detail = result.recordedCount && result.rosterCount
+        ? `Attendance saved for ${result.recordedCount}/${result.rosterCount} students.`
+        : 'Attendance saved successfully';
       toast({
         title: 'Success',
-        description: result.message || 'Attendance saved successfully',
+        description: result.message || detail,
       });
 
       // Refresh history after saving
@@ -617,9 +623,12 @@ const AttendanceComponent = ({
       }
 
       const result = await response.json();
+      const detail = result.recordedCount && result.rosterCount
+        ? `Attendance saved for ${result.recordedCount}/${result.rosterCount} students.`
+        : `Attendance saved successfully for ${batch.name}`;
       toast({
         title: 'Success',
-        description: result.message || `Attendance saved successfully for ${batch.name}`,
+        description: result.message || detail,
       });
 
       fetchAttendanceHistory();
