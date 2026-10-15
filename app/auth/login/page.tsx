@@ -1,187 +1,268 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Eye, EyeOff } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { GraduationCap, Lock, User, ArrowRight, AlertCircle, KeyRound, Check } from "lucide-react";
+
+const DEMO_PRESETS = [
+  { label: "Stakeholder", ident: "stakeholder@school.edu", desc: "School Trustee (All access & Concession approval)" },
+  { label: "Principal", ident: "principal@school.edu", desc: "Head of Institution (Setup & Promotions)" },
+  { label: "Teacher Incharge", ident: "incharge10@school.edu", desc: "Class 10 Academic Incharge" },
+  { label: "Teacher John (Dual)", ident: "teacher.john@school.edu", desc: "Head 10-A + Teaches 10-B Mathematics" },
+  { label: "Teacher Priya", ident: "teacher.priya@school.edu", desc: "Subject Teacher (Science 10-A & 10-B)" },
+  { label: "Accounts Officer", ident: "accounts@school.edu", desc: "Finance, Ledger, Payments & Payroll" },
+  { label: "Admissions Officer", ident: "admissions@school.edu", desc: "Enquiries, Applications & Enrollment" },
+  { label: "Student: Aarav", ident: "ADM2026001", desc: "Class 10-A • Admission No: ADM2026001" },
+  { label: "Student: Rohan", ident: "ADM2026003", desc: "Class 10-B • Has pending fee reminder" },
+];
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { toast } = useToast();
-  const supabase = createClient();
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
-    // Basic validation
-    if (!email || !password) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter both email and password",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
-      setLoading(false);
-      return;
-    }
+    setIsLoading(true);
+    setErrorMessage(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        // Handle specific error cases
-        let errorMessage = error.message;
-
-        if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "Invalid email or password. Please check your credentials and try again.";
-        } else if (error.message.includes("Email not confirmed")) {
-          errorMessage = "Please verify your email address before logging in.";
-        } else if (error.message.includes("User not found")) {
-          errorMessage = "No account found with this email address.";
-        } else if (error.message.toLowerCase().includes("banned")) {
-          errorMessage = "Your account has been disabled. Please contact the administrator.";
-        }
-
-        toast({
-          title: "Login Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!data.user) {
-        toast({
-          title: "Login Failed",
-          description: "Unable to authenticate. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      await fetch("/api/account/audit", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "LOGIN_SUCCESS" }),
-      }).catch(() => undefined);
-
-      // Success
-      toast({
-        title: "Success",
-        description: "Logged in successfully! Redirecting...",
+        body: JSON.stringify({ identifier, password }),
       });
 
-      // Small delay to show success message before redirect
-      setTimeout(() => {
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error?.message || "Invalid credentials. Please verify your identifier and password.");
+      }
+
+      if (data.user?.mustChangePassword) {
+        router.push("/auth/change-password");
+      } else {
         router.push("/dashboard");
-        router.refresh();
-      }, 500);
-
-    } catch (error) {
-      console.error("Login error:", error);
-      toast({
-        title: "Network Error",
-        description: "Unable to connect to the server. Please check your internet connection and try again.",
-        variant: "destructive",
-      });
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  const applyPreset = (ident: string) => {
+    setIdentifier(ident);
+    setPassword("Password@123");
+    setErrorMessage(null);
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Login</CardTitle>
-          <CardDescription className="text-center">
-            Enter your email and password to access the dashboard
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                required
-              />
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem",
+        background: "radial-gradient(circle at 50% 20%, rgba(14, 165, 233, 0.1) 0%, rgba(7, 11, 20, 1) 75%)",
+      }}
+    >
+      <div
+        className="glass-panel"
+        style={{
+          width: "100%",
+          maxWidth: "960px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))",
+          overflow: "hidden",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        {/* Left Side: Credentials Form */}
+        <div style={{ padding: "3rem 2.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "2rem" }}>
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "10px",
+                  background: "linear-gradient(135deg, #0ea5e9, #14b8a6)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <GraduationCap size={22} color="#fff" />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontFamily: "var(--font-heading)", fontSize: "1.1rem" }}>
+                  5 Point Engineering
+                </div>
+                <div style={{ fontSize: "0.72rem", color: "var(--teal-400)", textTransform: "uppercase", fontWeight: 600 }}>
+                  Institutional Portal
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          <h1 style={{ fontSize: "1.75rem", marginBottom: "0.5rem" }}>Portal Sign In</h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: "2rem" }}>
+            Enter your Admission Number (e.g. <code>ADM2026001</code>) or official email address to continue.
+          </p>
+
+          {errorMessage && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                padding: "0.85rem 1rem",
+                borderRadius: "8px",
+                background: "rgba(244, 63, 94, 0.15)",
+                border: "1px solid rgba(244, 63, 94, 0.3)",
+                color: "#fda4af",
+                fontSize: "0.85rem",
+                marginBottom: "1.5rem",
+              }}
+            >
+              <AlertCircle size={18} style={{ flexShrink: 0 }} />
+              <div>{errorMessage}</div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
+          )}
+
+          <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
+                Admission Number or Registered Email
+              </label>
+              <div style={{ position: "relative" }}>
+                <User size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+                <input
                   required
-                  className="pr-10"
+                  type="text"
+                  className="input-control"
+                  style={{ paddingLeft: "2.75rem" }}
+                  placeholder="ADM2026001 or name@school.edu"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                  <span className="sr-only">
-                    {showPassword ? "Hide password" : "Show password"}
-                  </span>
-                </button>
               </div>
             </div>
-            <div className="flex justify-end">
-              <Link
-                href="/auth/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                Forgot password?
-              </Link>
+
+            <div>
+              <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>
+                Password
+              </label>
+              <div style={{ position: "relative" }}>
+                <Lock size={18} style={{ position: "absolute", left: "1rem", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+                <input
+                  required
+                  type="password"
+                  className="input-control"
+                  style={{ paddingLeft: "2.75rem" }}
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Sign In
-            </Button>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn-primary"
+              style={{ width: "100%", marginTop: "0.5rem", padding: "0.85rem" }}
+            >
+              {isLoading ? "Authenticating..." : (
+                <>
+                  Sign In <ArrowRight size={17} />
+                </>
+              )}
+            </button>
           </form>
-        </CardContent>
-        <CardFooter className="flex justify-center text-sm text-gray-500">
-          Contact administrator if you don&apos;t have an account
-        </CardFooter>
-      </Card>
+
+          <div style={{ marginTop: "2rem", textAlign: "center", fontSize: "0.82rem", color: "var(--text-muted)" }}>
+            Need help? Contact School IT Desk at <code>contact@5point-engineering.edu.in</code>
+          </div>
+        </div>
+
+        {/* Right Side: Demo Quick Credentials Panel */}
+        <div
+          style={{
+            background: "rgba(11, 17, 32, 0.65)",
+            borderLeft: "1px solid rgba(255, 255, 255, 0.08)",
+            padding: "3rem 2.25rem",
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", color: "var(--teal-400)" }}>
+            <KeyRound size={18} />
+            <span style={{ fontWeight: 700, fontSize: "0.95rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              Quick Demo Access
+            </span>
+          </div>
+          <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginBottom: "1.25rem" }}>
+            Click any role below to pre-populate credentials (Default password: <code>Password@123</code>):
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.6rem",
+              overflowY: "auto",
+              maxHeight: "380px",
+              paddingRight: "0.5rem",
+            }}
+          >
+            {DEMO_PRESETS.map((p) => {
+              const isSelected = identifier.toLowerCase() === p.ident.toLowerCase();
+              return (
+                <button
+                  key={p.ident}
+                  type="button"
+                  onClick={() => applyPreset(p.ident)}
+                  style={{
+                    background: isSelected ? "rgba(14, 165, 233, 0.15)" : "rgba(30, 41, 59, 0.4)",
+                    border: `1px solid ${isSelected ? "var(--cyan-500)" : "rgba(255, 255, 255, 0.06)"}`,
+                    borderRadius: "8px",
+                    padding: "0.65rem 0.85rem",
+                    textAlign: "left",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) e.currentTarget.style.background = "rgba(51, 65, 85, 0.5)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.background = "rgba(30, 41, 59, 0.4)";
+                  }}
+                >
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "0.86rem", color: isSelected ? "var(--cyan-400)" : "var(--text-primary)" }}>
+                      {p.label}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{p.desc}</div>
+                  </div>
+                  {isSelected && <Check size={16} color="#38bdf8" />}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ marginTop: "auto", paddingTop: "1.5rem", borderTop: "1px solid rgba(255, 255, 255, 0.06)", fontSize: "0.78rem", color: "var(--text-dim)" }}>
+            Tip: &quot;Teacher John&quot; has dual responsibilities. Once logged in, use the header badge to switch between Section Head (10-A) and Subject Teacher (10-B Math).
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

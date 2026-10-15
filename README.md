@@ -1,278 +1,93 @@
-# 5 Point Education Hub — Coaching Center Management System
+# LMS-0.1 — 5 Point Engineering High School Portal
 
-A comprehensive, production-ready web application for managing coaching centers with support for tuition batches and home tutoring services.
-
---
-
-## 🚀 Features.
-
-### Public Feature
-
-* **Landing Page:** Professional homepage with service showcase
-* **Enquiry Form:** Public form for capturing leads with validation
-* **Service Types:** Supports both **Tuition Batch** and **Home Tutor** modes
-
-### Role-Based Dashboards
-
-#### 🧑‍💼 Admin Dashboard
-
-* Revenue analytics and KPIs
-* Conversion rate tracking
-* Lost leads analysis by reason
-* Subject demand visualization
-* Pending follow-ups monitoring
-
-#### 👩‍💼 Receptionist Dashboard
-
-* Enquiry management with status tracking
-* Lead conversion workflow
-* Multi-step admission form
-* Payment recording
-* Student onboarding
-
-#### 👨‍🏫 Teacher Dashboard
-
-* Manage assigned batches
-* View students in each batch
-* Create and manage exams
-* Enter and update student scores
-
-#### 👨‍🎓 Student Dashboard
-
-* Performance tracking with charts
-* Exam results history
-* Pending fees display
-* Upcoming classes information
+A modern, full-stack School Management System and Learning Management Portal built with **Next.js 14, React 18, PostgreSQL, Prisma ORM, and Tailwind-free Vanilla CSS design system**.
 
 ---
 
-## 🛠️ Tech Stack
+## 🌟 Key Highlights & Architecture
 
-* **Framework:** Next.js 14+ (App Router)
-* **Language:** TypeScript
-* **Styling:** Tailwind CSS + shadcn/ui
-* **Database:** PostgreSQL (Supabase / Neon compatible)
-* **ORM:** Prisma
-* **Authentication:** NextAuth.js
-* **Forms:** React Hook Form + Zod
-* **Charts:** Recharts
-* **State Management:** React Query (TanStack Query)
-
----
-
-## 📋 Prerequisites
-
-* Node.js 18+
-* PostgreSQL database (local or cloud)
-* npm or yarn
+- **Public Institution Showcase**: CBSE Affiliated Senior Secondary School (Code `1930482`), STEM & AI Lab highlights, Academic streams (Science & Commerce), and online inquiry capture.
+- **Unified Role-Based Access Control (RBAC)**: Granular permissions for:
+  - **Stakeholder / Managing Trustee**: Institutional governance, fee realization oversight, and scholarship sign-off.
+  - **Principal & Head of School**: Academic structure, Class 10/11 streams setup, and promotion matrix.
+  - **Teacher Incharge**: Grade-level coordination, exam scheduling, and report card publishing.
+  - **Multi-Role Faculty (Dual Responsibilities)**: Section Head attendance registers + Subject Teacher coursework & grading.
+  - **Accounts & Bursar Directorate**: Fee ledger reconciliation, offline UPI/Cash/Bank receipt generation, and fee structures.
+  - **Admissions Directorate**: Public enquiry pipeline, applicant verification, and automated matriculation.
+  - **Student & Parent Digital Portal**: Real-time attendance, official CBSE report cards (A1 grade), and zero-dues ledger transparency.
+- **Embedded Database Automation**: Built-in zero-config embedded PostgreSQL server for instant local development and testing (`npm run db:local`).
+- **Automated Client Demo & Screen Recorder**: High-definition Selenium script with on-screen HUD, smooth scroll engine, and automated FFmpeg MP4 recording (`npm run demo`).
 
 ---
 
-## 🔧 Installation & Setup
+## 🚀 Quick Start Guide
 
-### 1️⃣ Clone and Install Dependencies
+### Prerequisites
+- Node.js >= 20
+- Python 3.10+ (for running the automated demo script)
+- FFmpeg (for automated video encoding)
 
+### 1. Installation
 ```bash
-# Navigate to project directory
-cd 5_point_coaching_quoder
-
-# Install dependencies
 npm install
 ```
 
----
-
-### 2️⃣ Set Up Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-
-```
-
----
-
-### 3️⃣ Initialize Database
-
+### 2. Start Local PostgreSQL Database & Seed Demo Data
 ```bash
-# Push Prisma schema to database
-npm run db:push
-
-# Generate Prisma Client
-npx prisma generate
-
-# Seed database with sample data
-npm run db:seed
+npm run db:local -- --seed
 ```
+This launches a local embedded PostgreSQL server on port `54329`, runs Prisma migrations, and seeds test accounts.
 
----
-
-### 4️⃣ Run Development Server
-
+### 3. Start Development Server
 ```bash
 npm run dev
 ```
-
-Visit:
-
-```
-
-```
+Open [http://localhost:3000](http://localhost:3000) (or configured port) in your browser.
 
 ---
 
-## 👥 Demo Credentials
+## 🔑 Default Demo Login Credentials
 
-After seeding, log in using:
+All demo accounts share the default password: `Password@123`
 
-* **Admin:** [admin@5point.edu](mailto:admin@5point.edu) / admin123
-* **Receptionist:** [reception@5point.edu](mailto:reception@5point.edu) / reception123
-* **Teacher:** [teacher1@5point.edu](mailto:teacher1@5point.edu) / teacher123
-* **Student:** [student1@example.com](mailto:student1@example.com) / student123
-
----
-
-## 📊 Database Schema
-
-### Key Models
-
-* **User:** Unified user model with roles
-* **StudentProfile:** Extended student information
-* **TeacherProfile:** Qualifications & specializations
-* **Enquiry:** Lead management with status tracking
-* **Batch:** Group classes with teacher assignments
-* **Admission:** Student enrollment records
-* **Payment:** Fee tracking
-* **Exam:** Assessments
-* **Result:** Student exam scores
-
-### Enums
-
-* **Role:** ADMIN, RECEPTIONIST, TEACHER, STUDENT
-* **ServiceType:** HOME_TUTOR, TUITION_BATCH
-* **Board:** ICSE, CBSE, WBBSE
-* **EnquiryStatus:** PENDING, FEES_DISCUSSED, ADMITTED, LOST
-* **LostReason:** FEES, TIMING, SUBJECT_ISSUES, OTHER
+| Role | Username / Identifier | Description |
+|---|---|---|
+| **Stakeholder** | `stakeholder@school.edu` | Managing Trustee (Governance & Scholarship Sign-off) |
+| **Principal** | `principal@school.edu` | Head of Institution (Academics & Promotions) |
+| **Teacher Incharge** | `incharge10@school.edu` | Class 10 Academic Coordinator |
+| **Teacher John (Dual)** | `teacher.john@school.edu` | Head 10-A + Teaches 10-B Mathematics |
+| **Teacher Priya** | `teacher.priya@school.edu` | Subject Teacher (Science 10-A & 10-B) |
+| **Accounts Officer** | `accounts@school.edu` | Finance, Ledger, Payments & Receipts |
+| **Admissions Officer** | `admissions@school.edu` | Enquiries, Applications & Enrollment |
+| **Student (Aarav)** | `ADM2026001` | Class 10-A • 98.5% Attendance • #1 Rank |
+| **Student (Rohan)** | `ADM2026003` | Class 10-B • Pending Fee Reminder |
 
 ---
 
-## 🎯 Key Features Implementation
+## 🎬 Automated Client Demo & Video Recorder
 
-### 1️⃣ Automatic Role-Based Redirection
-
-Users are redirected automatically to their dashboard after login.
-
-### 2️⃣ Lead Management
-
-* Enquiry status tracking
-* Mandatory lost reason
-* Follow-up date reminders
-
-### 3️⃣ Student Onboarding
-
-* Multi-step admission process
-* Automatic user creation
-* Temporary password display
-
-### 4️⃣ Security
-
-* Protected routes via middleware
-* Role-based API checks
-* Session-based authentication
-
----
-
-## 📁 Project Structure
-
-```
-├── app/
-│   ├── (auth)/
-│   │   └── login/
-│   ├── api/
-│   │   ├── auth/
-│   │   └── enquiry/
-│   ├── dashboard/
-│   │   ├── admin/
-│   │   ├── reception/
-│   │   ├── teacher/
-│   │   └── student/
-│   ├── enquiry/
-│   ├── layout.tsx
-│   └── page.tsx
-├── components/
-│   └── ui/
-├── lib/
-│   ├── auth.ts
-│   ├── prisma.ts
-│   └── utils.ts
-├── prisma/
-│   ├── schema.prisma
-│   └── seed.ts
-└── middleware.ts
-```
-
----
-
-## 🔐 Role-Based Access Control
-
-| Path                 | Access       |
-| -------------------- | ------------ |
-| /dashboard/admin     | Admin        |
-| /dashboard/reception | Receptionist |
-| /dashboard/teacher   | Teacher      |
-| /dashboard/student   | Student      |
-
----
-
-## 🗄️ Available Scripts
+Run the end-to-end Selenium walkthrough with on-screen narration HUD and automated MP4 screen recording:
 
 ```bash
-npm run dev
-npm run build
-npm run start
-npm run lint
-npm run db:push
-npm run db:seed
-npm run db:studio
+# Watch the Chrome browser live while recording:
+npm run demo
+
+# Run silently in background headless mode:
+npm run demo:headless
 ```
 
----
-
-## 📦 Next Steps for Production
-
-* Configure production environment variables
-* Add email service for password distribution
-* Implement document uploads
-* Add SMS follow-up notifications
-* Integrate payment gateway
-* Add reports + PDF receipts
-* Set up automated database backups
+Or double-click `run_demo.bat` on Windows.
 
 ---
 
-## 🐛 Troubleshooting
+## 📦 Tech Stack
 
-### Database Issues
-
-* Check `DATABASE_URL`
-* Ensure PostgreSQL is running
-* Verify cloud firewall rules
-
-### Authentication Issues
-
-* Clear cookies
-* Ensure `NEXTAUTH_SECRET` is set
-* Check `NEXTAUTH_URL`
-
-### Build Errors
-
-* Delete `node_modules` and `.next`
-* Run install again
-* Confirm env variables
+- **Framework**: Next.js 14 (App Router)
+- **Frontend**: React 18, Lucide Icons, Recharts, Custom Glassmorphism CSS
+- **Database**: PostgreSQL with Prisma ORM
+- **Automation & Testing**: Vitest, Playwright, Selenium WebDriver (Python), OpenCV, FFmpeg
 
 ---
 
 ## 📄 License
-
-This project is created for **educational and demonstration purposes**.
-
+Private & Proprietary — 5 Point Engineering Academy.

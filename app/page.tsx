@@ -1,677 +1,686 @@
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import {
-  BookOpen,
-  Home,
-  Users,
-  TrendingUp,
-  ChevronRight,
-  Sparkles,
-  Target,
-  Star,
-  MapPin,
-  Phone,
-  CheckCircle2,
   GraduationCap,
-  Clock,
-  Award,
   Cpu,
-  BarChart3,
-  Activity,
+  Atom,
+  Building,
+  CheckCircle2,
+  ArrowRight,
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  Sparkles,
+  ShieldCheck,
+  Send,
+  Lock,
 } from "lucide-react";
 
-const heroVideoUrl = process.env.NEXT_PUBLIC_HERO_VIDEO_URL;
-
 export default function HomePage() {
+  const [enquiryForm, setEnquiryForm] = useState({
+    studentName: "",
+    guardianName: "",
+    phone: "",
+    email: "",
+    classGrade: "10",
+    message: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<{
+    success: boolean;
+    number?: string;
+    error?: string;
+  } | null>(null);
+
+  const handleEnquirySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmissionResult(null);
+
+    try {
+      const res = await fetch("/api/public/enquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentName: enquiryForm.studentName,
+          guardianName: enquiryForm.guardianName,
+          phone: enquiryForm.phone,
+          email: enquiryForm.email || null,
+          message: `Interested in Grade ${enquiryForm.classGrade}. ${enquiryForm.message}`,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error?.message || "Failed to submit enquiry");
+      }
+
+      setSubmissionResult({ success: true, number: data.enquiryNumber });
+      setEnquiryForm({
+        studentName: "",
+        guardianName: "",
+        phone: "",
+        email: "",
+        classGrade: "10",
+        message: "",
+      });
+    } catch (err: any) {
+      setSubmissionResult({ success: false, error: err.message });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-800">
-      {/* ========== NAVIGATION ========== */}
-      <nav className="sticky top-0 z-50 border-b border-gray-100 bg-white/95 backdrop-blur-md shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
-          <Link href="/" className="flex items-center group">
-            <div className="relative h-16 w-56">
-              <Image
-                src="/landing/logo.png"
-                alt="5 Point Education Hub"
-                fill
-                className="object-contain object-left"
-                priority
-              />
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* ── Top Announcement Bar ── */}
+      <div
+        style={{
+          background: "linear-gradient(90deg, #0f172a, #0b1120, #0d9488)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+          padding: "0.5rem 1.5rem",
+          fontSize: "0.82rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          color: "var(--text-secondary)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", color: "var(--teal-400)" }}>
+            <Sparkles size={14} /> Admissions Open for Academic Year 2026-2027
+          </span>
+          <span style={{ display: "none", alignItems: "center", gap: "0.35rem" }} className="hide-mobile">
+            • CBSE Affiliation No. 1930482
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+            <Clock size={13} /> Mon - Sat: 8:00 AM - 4:00 PM IST
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+            <Phone size={13} /> +91 80 2345 6789
+          </span>
+        </div>
+      </div>
+
+      {/* ── Main Navigation Header ── */}
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          background: "rgba(11, 17, 32, 0.85)",
+          backdropFilter: "blur(16px)",
+          borderBottom: "1px solid rgba(255, 255, 255, 0.07)",
+          padding: "0.85rem 2rem",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Link href="/" style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+          <div
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "12px",
+              background: "linear-gradient(135deg, #0ea5e9, #14b8a6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 0 20px rgba(14, 165, 233, 0.35)",
+            }}
+          >
+            <GraduationCap size={24} color="#ffffff" />
+          </div>
+          <div>
+            <div style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "1.15rem", letterSpacing: "-0.01em" }}>
+              5 Point Engineering
             </div>
+            <div style={{ fontSize: "0.72rem", color: "var(--teal-400)", letterSpacing: "0.04em", textTransform: "uppercase", fontWeight: 600 }}>
+              High School • Bengaluru
+            </div>
+          </div>
+        </Link>
+
+        <nav style={{ display: "flex", alignItems: "center", gap: "1.75rem" }}>
+          <a href="#academics" style={{ color: "var(--text-secondary)", fontSize: "0.92rem", fontWeight: 500 }} className="hover:text-white">
+            Academics
+          </a>
+          <a href="#streams" style={{ color: "var(--text-secondary)", fontSize: "0.92rem", fontWeight: 500 }} className="hover:text-white">
+            Streams & Labs
+          </a>
+          <a href="#admissions" style={{ color: "var(--text-secondary)", fontSize: "0.92rem", fontWeight: 500 }} className="hover:text-white">
+            Admissions
+          </a>
+          <a href="#contact" style={{ color: "var(--text-secondary)", fontSize: "0.92rem", fontWeight: 500 }} className="hover:text-white">
+            Campus
+          </a>
+          <Link
+            href="/auth/login"
+            className="btn-primary"
+            style={{ padding: "0.55rem 1.15rem", fontSize: "0.88rem" }}
+          >
+            <Lock size={15} /> Portal Sign In
           </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/enquiry" className="hidden sm:block">
-              <Button
-                variant="ghost"
-                className="text-[#1B4F8A] font-semibold hover:bg-blue-50"
-              >
-                Contact Us
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button className="bg-[#1B4F8A] hover:bg-[#153e6c] text-white shadow-md transition-all duration-300 font-semibold px-6 rounded-lg">
-                Login
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+        </nav>
+      </header>
 
-      {/* ========== HERO SECTION ========== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#EFF6FF] via-white to-[#FFF7ED]">
-        {heroVideoUrl ? (
-          <video className="absolute inset-0 h-full w-full object-cover opacity-15" autoPlay muted loop playsInline poster="/landing/1.jpeg">
-            <source src={heroVideoUrl} />
-          </video>
-        ) : (
-          <Image src="/landing/1.jpeg" alt="" fill priority className="object-cover opacity-5" />
-        )}
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-100/60 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-orange-100/60 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 py-16 sm:py-20 lg:py-28">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left Content */}
-            <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-bold mb-8 border border-orange-200">
-                <Sparkles className="h-4 w-4 text-orange-500" />
-                Admissions Open for 2026-2027
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-[#0F172A] mb-6 leading-[1.12] tracking-tight">
-                Build Your Future with{" "}
-                <span className="text-[#1B4F8A]">5 Point</span>{" "}
-                <span className="text-[#F97316]">Education Hub</span>
-              </h1>
-
-              <p className="text-lg text-slate-600 mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                Quality coaching for School, Board Exams, NEET, JEE, and
-                beyond. Expert faculty, personalised attention, and a proven
-                track record of results — right here in Sonarpur.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link href="/enquiry">
-                  <Button
-                    size="lg"
-                    className="bg-[#F97316] hover:bg-[#EA580C] text-white shadow-lg shadow-orange-400/25 text-lg px-8 h-14 rounded-xl font-bold w-full sm:w-auto transition-all duration-300"
-                  >
-                    <Target className="mr-2 h-5 w-5" />
-                    Enquire Now
-                  </Button>
-                </Link>
-                <a href="tel:8100567748">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="border-2 border-[#1B4F8A] text-[#1B4F8A] hover:bg-[#1B4F8A] hover:text-white text-lg px-8 h-14 rounded-xl font-bold w-full sm:w-auto bg-white transition-all duration-300"
-                  >
-                    <Phone className="mr-2 h-5 w-5" />
-                    Call Us Now
-                  </Button>
-                </a>
-                <a href="tel:8902673460">
-                  <Button size="lg" variant="outline" className="border-2 border-[#F97316] text-[#C2410C] hover:bg-[#F97316] hover:text-white text-lg px-6 h-14 rounded-xl font-bold w-full sm:w-auto bg-white transition-all duration-300">
-                    <Phone className="mr-2 h-5 w-5" /> 8902673460
-                  </Button>
-                </a>
-              </div>
-
-              {/* Stats row */}
-              <div className="mt-14 pt-8 border-t border-slate-200/80 grid grid-cols-3 gap-6 max-w-md mx-auto lg:mx-0">
-                {[
-                  { value: "500+", label: "Students" },
-                  { value: "95%", label: "Success Rate" },
-                  { value: "ISO 9001:2015", label: "Quality Standard" },
-                ].map((s, i) => (
-                  <div key={i} className="text-center lg:text-left">
-                    <div className="text-2xl sm:text-3xl font-black text-[#1B4F8A]">
-                      {s.value}
-                    </div>
-                    <div className="text-xs sm:text-sm font-medium text-slate-500 mt-1 uppercase tracking-wide">
-                      {s.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right — Main banner poster */}
-            <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
-              <div className="rounded-2xl overflow-hidden shadow-2xl border-4 border-white ring-1 ring-slate-200/50">
-                <Image
-                  src="/landing/1.jpeg"
-                  width={1200}
-                  height={800}
-                  alt="5 Point Education Hub — Programs & Courses"
-                  className="w-full h-auto block"
-                />
-              </div>
-              {/* Floating badge */}
-              <div className="absolute -bottom-5 -left-5 sm:-left-8 bg-white p-3 sm:p-4 rounded-xl shadow-lg ring-1 ring-slate-100 z-10">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-slate-800">Top Rated</div>
-                    <div className="text-xs text-slate-500">Coaching Center</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========== PROGRAMS WE OFFER (from the banners) ========== */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-14 max-w-2xl mx-auto">
-            <h2 className="text-[#F97316] font-bold tracking-wider uppercase text-sm mb-3">
-              What We Offer
-            </h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] mb-4">
-              Programs Designed for{" "}
-              <span className="text-[#1B4F8A]">Your Success</span>
-            </h3>
-            <p className="text-lg text-slate-600">
-              From school education to competitive exams and beyond — we cover
-              it all with subject-wise expert faculty.
-            </p>
+      {/* ── Hero Section ── */}
+      <section
+        style={{
+          position: "relative",
+          padding: "5rem 2rem 4rem",
+          overflow: "hidden",
+          background: "radial-gradient(circle at 50% 10%, rgba(14, 165, 233, 0.12) 0%, rgba(7, 11, 20, 0) 70%)",
+        }}
+      >
+        <div style={{ maxWidth: "1140px", margin: "0 auto", textAlign: "center" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.35rem 0.95rem",
+              borderRadius: "9999px",
+              background: "rgba(20, 184, 166, 0.12)",
+              border: "1px solid rgba(20, 184, 166, 0.3)",
+              color: "var(--teal-400)",
+              fontSize: "0.84rem",
+              fontWeight: 600,
+              marginBottom: "1.5rem",
+            }}
+          >
+            <ShieldCheck size={16} /> CBSE Affiliated Senior Secondary School • Code 1930482
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: BookOpen,
-                title: "School Education",
-                subtitle: "Class V – X",
-                desc: "CBSE, ICSE & WBSE boards. All subjects covered by dedicated teachers with regular assessments.",
-                color: "bg-[#1B4F8A]",
-                shadow: "shadow-blue-900/15",
-              },
-              {
-                icon: GraduationCap,
-                title: "Higher Secondary",
-                subtitle: "XI – XII (Science & Arts)",
-                desc: "Comprehensive coaching for board exams with focus on conceptual clarity and exam techniques.",
-                color: "bg-[#0369A1]",
-                shadow: "shadow-sky-900/15",
-              },
-              {
-                icon: Target,
-                title: "NEET / JEE Prep",
-                subtitle: "Competitive Exams",
-                desc: "Focused preparation for medical & engineering entrances with mock tests, strategy sessions, and repeater batches.",
-                color: "bg-[#F97316]",
-                shadow: "shadow-orange-500/15",
-              },
-              {
-                icon: Cpu,
-                title: "Robotics & Computer",
-                subtitle: "AI, Programming, Web Dev",
-                desc: "Future-ready skills in robotics, AI fundamentals, basic programming, and web development.",
-                color: "bg-[#7C3AED]",
-                shadow: "shadow-violet-500/15",
-              },
-              {
-                icon: BarChart3,
-                title: "Financial Courses",
-                subtitle: "Tally, GST, Share Market",
-                desc: "Practical financial literacy and accounting courses for students and young professionals.",
-                color: "bg-[#059669]",
-                shadow: "shadow-emerald-600/15",
-              },
-              {
-                icon: Activity,
-                title: "Extra-Curricular",
-                subtitle: "Table Tennis, Abacus, Drawing",
-                desc: "Holistic development through sports, mental math, and creative activities alongside academics.",
-                color: "bg-[#DB2777]",
-                shadow: "shadow-pink-600/15",
-              },
-            ].map((program, i) => (
-              <div
-                key={i}
-                className={`group relative bg-white rounded-2xl border border-slate-200 p-7 hover:shadow-xl ${program.shadow} transition-all duration-300`}
-              >
-                <div
-                  className={`w-14 h-14 ${program.color} rounded-xl flex items-center justify-center mb-5 shadow-md group-hover:-translate-y-1 transition-transform duration-300`}
-                >
-                  <program.icon className="h-7 w-7 text-white" />
-                </div>
-                <h4 className="text-xl font-bold text-[#0F172A] mb-1">
-                  {program.title}
-                </h4>
-                <p className="text-sm font-semibold text-[#F97316] mb-3">
-                  {program.subtitle}
-                </p>
-                <p className="text-slate-600 text-sm leading-relaxed">
-                  {program.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+          <h1
+            style={{
+              fontSize: "3.5rem",
+              lineHeight: 1.15,
+              marginBottom: "1.25rem",
+              fontWeight: 800,
+            }}
+          >
+            Pioneering Minds. <br />
+            <span className="text-gradient-teal">Engineering Futures.</span>
+          </h1>
 
-      {/* ========== BANNERS SHOWCASE ========== */}
-      <section className="py-16 bg-slate-50 border-y border-slate-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-10">
-          <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-            <Image
-              src="/landing/3.jpeg"
-              width={1600}
-              height={1000}
-              alt="5 Point Education Hub — Our Facilities"
-              className="w-full h-auto block"
-              loading="lazy"
-            />
-          </div>
-          <div className="rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-white">
-            <Image
-              src="/landing/2.jpeg"
-              width={1600}
-              height={1000}
-              alt="5 Point Education Hub — Home Tuition Program"
-              className="w-full h-auto block"
-              loading="lazy"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ========== OUR RESULTS ========== */}
-      <section className="py-20 bg-gradient-to-b from-[#EFF6FF] to-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          {/* Section Header */}
-          <div className="text-center mb-12 max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 bg-yellow-100 text-yellow-700 px-4 py-2 rounded-full text-sm font-bold mb-6 border border-yellow-200">
-              <Award className="h-4 w-4 text-yellow-500" />
-              Proven Track Record
-            </div>
-            <h2 className="text-[#F97316] font-bold tracking-wider uppercase text-sm mb-3">
-              Our Results
-            </h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] mb-4">
-              Class X Board Results{" "}
-              <span className="text-[#1B4F8A]">2026</span>
-            </h3>
-            <p className="text-lg text-slate-600">
-              We take pride in our students&apos; academic excellence. Here are
-              the outstanding results achieved by our Class X batch in 2026.
-            </p>
-          </div>
-
-          {/* Result Card */}
-          <div className="relative group">
-            {/* Glow effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#1B4F8A] via-[#F97316] to-[#1B4F8A] rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-500 pointer-events-none" />
-
-            <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-100 ring-1 ring-slate-200/50">
-              {/* Top accent bar */}
-              <div className="h-2 w-full bg-gradient-to-r from-[#1B4F8A] to-[#F97316]" />
-
-              {/* Badge row */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/60">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#1B4F8A] rounded-xl flex items-center justify-center shadow">
-                    <GraduationCap className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold text-[#0F172A]">
-                      5 Point Education Hub
-                    </div>
-                    <div className="text-xs text-slate-500">
-                      Board Examination Results — 2026
-                    </div>
-                  </div>
-                </div>
-                <div className="hidden sm:flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-3 py-1.5 rounded-full text-xs font-bold">
-                  <TrendingUp className="h-3.5 w-3.5" />
-                  Outstanding Performance
-                </div>
-              </div>
-
-              {/* SVG Result Sheet */}
-              <div className="p-4 sm:p-6 bg-white">
-                <Image
-                  src="/landing/class-x-result-2026.svg"
-                  width={1600}
-                  height={1000}
-                  alt="5 Point Education Hub — Class X Board Examination Results 2026"
-                  className="w-full h-auto block rounded-xl border border-slate-100"
-                  loading="lazy"
-                />
-              </div>
-
-              {/* Bottom CTA */}
-              <div className="px-6 py-5 bg-gradient-to-r from-[#EFF6FF] to-[#FFF7ED] border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p className="text-sm text-slate-600 text-center sm:text-left">
-                  🎉 Congratulations to all our achievers! Join us for the{" "}
-                  <span className="font-bold text-[#1B4F8A]">2026–2027</span>{" "}
-                  batch and write your own success story.
-                </p>
-                <Link href="/enquiry" className="flex-shrink-0">
-                  <button className="bg-[#F97316] hover:bg-[#EA580C] text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-md shadow-orange-400/25 transition-all duration-300 flex items-center gap-2">
-                    <Target className="h-4 w-4" />
-                    Enquire Now
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========== SERVICES: BATCH VS HOME TUTOR ========== */}
-      <section id="services" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16 max-w-2xl mx-auto">
-            <h2 className="text-[#F97316] font-bold tracking-wider uppercase text-sm mb-3">
-              How You Learn
-            </h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] mb-4">
-              Choose Your Learning Style
-            </h3>
-            <p className="text-lg text-slate-600">
-              Whether you prefer group learning or personal coaching — we have
-              the perfect option for you.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-            {/* Batch Card */}
-            <div className="group relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
-              <div className="h-2 bg-[#1B4F8A] w-full" />
-              <div className="p-8">
-                <div className="w-16 h-16 bg-[#1B4F8A] rounded-2xl mb-6 flex items-center justify-center shadow-lg shadow-blue-900/20 group-hover:-translate-y-1 transition-transform duration-300">
-                  <Users className="h-8 w-8 text-white" />
-                </div>
-                <h4 className="text-2xl font-black text-[#0F172A] mb-2">
-                  Tuition Batch
-                </h4>
-                <p className="text-slate-600 mb-6">
-                  Learn collaboratively at our center in Millan Pally, Sonarpur.
-                </p>
-                <ul className="space-y-3 text-slate-700 mb-8">
-                  {[
-                    "Highly qualified & experienced teachers",
-                    "Interactive & competitive group learning",
-                    "Regular mock tests & progress tracking",
-                    "Doubt-clearing sessions after class",
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm">
-                      <CheckCircle2 className="h-5 w-5 text-[#1B4F8A] flex-shrink-0 mt-0.5" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/enquiry?service=batch" className="block">
-                  <Button className="w-full bg-[#1B4F8A] hover:bg-[#153e6c] text-white shadow-md h-13 rounded-xl text-base font-bold transition-all duration-300">
-                    Enquire for Batch
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            {/* Home Tutor Card */}
-            <div className="group relative bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
-              <div className="h-2 bg-[#F97316] w-full" />
-              <div className="p-8">
-                <div className="w-16 h-16 bg-[#F97316] rounded-2xl mb-6 flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:-translate-y-1 transition-transform duration-300">
-                  <Home className="h-8 w-8 text-white" />
-                </div>
-                <h4 className="text-2xl font-black text-[#0F172A] mb-2">
-                  Home Tutor
-                </h4>
-                <p className="text-slate-600 mb-6">
-                  Premium 1-on-1 attention at your doorstep — expert teachers at home.
-                </p>
-                <ul className="space-y-3 text-slate-700 mb-8">
-                  {[
-                    "100% dedicated attention to your child",
-                    "Comfortable learning in your home",
-                    "Customised curriculum & pace",
-                    "Flexible scheduling that works for you",
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-sm">
-                      <CheckCircle2 className="h-5 w-5 text-[#F97316] flex-shrink-0 mt-0.5" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/enquiry?service=home" className="block">
-                  <Button className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white shadow-md h-13 rounded-xl text-base font-bold transition-all duration-300">
-                    Enquire for Home Tuition
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ========== WHY CHOOSE US ========== */}
-      <section className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16 max-w-2xl mx-auto">
-            <h2 className="text-[#F97316] font-bold tracking-wider uppercase text-sm mb-3">
-              Why 5 Point?
-            </h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-[#0F172A] mb-4">
-              What Sets Us Apart
-            </h3>
-            <p className="text-lg text-slate-600">
-              We don&apos;t just teach — we build strong foundations,
-              confidence, and a love for learning.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                icon: Award,
-                title: "Expert Faculty",
-                desc: "Subject-wise specialist teachers with years of coaching experience.",
-              },
-              {
-                icon: Users,
-                title: "Small Batches",
-                desc: "Limited students per batch to ensure personalised attention for everyone.",
-              },
-              {
-                icon: BookOpen,
-                title: "Study Materials",
-                desc: "Comprehensive notes, worksheets, and practice sets provided free of cost.",
-              },
-              {
-                icon: Clock,
-                title: "All Boards",
-                desc: "CBSE, ICSE, and WBSE — we cover every board with dedicated curriculums.",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="group text-center bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300"
-              >
-                <div className="w-14 h-14 bg-[#1B4F8A] rounded-xl flex items-center justify-center mx-auto mb-5 shadow-md group-hover:scale-110 transition-transform duration-300">
-                  <item.icon className="h-7 w-7 text-white" />
-                </div>
-                <h4 className="text-lg font-bold text-[#0F172A] mb-2">
-                  {item.title}
-                </h4>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  {item.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ========== CTA SECTION ========== */}
-      <section className="py-20 sm:py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[#1B4F8A]" />
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-orange-500/10 blur-3xl" />
-
-        <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
-            Ready to Start Your{" "}
-            <span className="text-[#F97316]">Learning Journey?</span>
-          </h2>
-          <p className="text-lg sm:text-xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Join hundreds of students who have achieved academic excellence
-            with 5 Point Education Hub.
+          <p
+            style={{
+              fontSize: "1.2rem",
+              color: "var(--text-secondary)",
+              maxWidth: "740px",
+              margin: "0 auto 2.5rem",
+              lineHeight: 1.6,
+            }}
+          >
+            A premier academic ecosystem where mathematics, pure sciences, and modern technology converge.
+            Empowering students with deep conceptual rigor, specialized laboratories, and institutional excellence.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/enquiry">
-              <Button
-                size="lg"
-                className="bg-[#F97316] hover:bg-[#EA580C] text-white shadow-xl shadow-orange-600/30 rounded-xl px-10 h-14 text-lg font-bold transition-all duration-300 hover:scale-105"
-              >
-                Submit Enquiry
-                <ChevronRight className="ml-2 w-5 h-5" />
-              </Button>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap", marginBottom: "4rem" }}>
+            <a href="#admissions" className="btn-primary" style={{ padding: "0.85rem 1.8rem", fontSize: "1rem" }}>
+              Enquire for Admission 2026-27 <ArrowRight size={18} />
+            </a>
+            <Link href="/auth/login" className="btn-secondary" style={{ padding: "0.85rem 1.8rem", fontSize: "1rem" }}>
+              <Lock size={18} /> Student & Staff Portal
             </Link>
-            <a href="tel:8100567748">
-              <Button
-                size="lg"
-                className="bg-white text-[#1B4F8A] hover:bg-blue-50 rounded-xl px-10 h-14 text-lg font-bold shadow-xl transition-all duration-300 hover:scale-105"
-              >
-                <Phone className="mr-2 w-5 h-5" />
-                Call 8100567748
-              </Button>
-            </a>
-            <a href="tel:8902673460">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-[#1B4F8A] rounded-xl px-8 h-14 text-lg font-bold w-full sm:w-auto">
-                <Phone className="mr-2 w-5 h-5" /> Call 8902673460
-              </Button>
-            </a>
+          </div>
+
+          {/* Key School Metrics */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+              gap: "1.25rem",
+              textAlign: "left",
+            }}
+          >
+            <div className="glass-panel" style={{ padding: "1.5rem" }}>
+              <div style={{ color: "var(--cyan-400)", fontSize: "2.25rem", fontWeight: 800, fontFamily: "var(--font-heading)" }}>
+                100%
+              </div>
+              <div style={{ fontWeight: 600, color: "var(--text-primary)", marginTop: "0.25rem" }}>CBSE Board Pass Rate</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
+                Class 10 & 12 Board Exams with 45+ Distinctions
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: "1.5rem" }}>
+              <div style={{ color: "var(--teal-400)", fontSize: "2.25rem", fontWeight: 800, fontFamily: "var(--font-heading)" }}>
+                1 : 12
+              </div>
+              <div style={{ fontWeight: 600, color: "var(--text-primary)", marginTop: "0.25rem" }}>Faculty Ratio</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
+                Individual mentorship by dedicated Subject Specialists
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: "1.5rem" }}>
+              <div style={{ color: "#fbbf24", fontSize: "2.25rem", fontWeight: 800, fontFamily: "var(--font-heading)" }}>
+                15+
+              </div>
+              <div style={{ fontWeight: 600, color: "var(--text-primary)", marginTop: "0.25rem" }}>Advanced STEM Labs</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
+                Robotics, AI, Physics, Chemistry & Applied Electronics
+              </div>
+            </div>
+
+            <div className="glass-panel" style={{ padding: "1.5rem" }}>
+              <div style={{ color: "#34d399", fontSize: "2.25rem", fontWeight: 800, fontFamily: "var(--font-heading)" }}>
+                ₹0
+              </div>
+              <div style={{ fontWeight: 600, color: "var(--text-primary)", marginTop: "0.25rem" }}>Hidden Surcharges</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginTop: "0.25rem" }}>
+                Fully transparent fee ledger and merit scholarships
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ========== FOOTER ========== */}
-      <footer className="bg-[#0F172A] text-slate-300 pt-16 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-14">
-            {/* Brand */}
-            <div>
-              <div className="relative h-14 w-48 mb-5 bg-white p-2 rounded-lg">
-                <Image
-                  src="/landing/logo.png"
-                  alt="5 Point Education Hub"
-                  fill
-                  className="object-contain"
-                />
+      {/* ── Academic Structure Section ── */}
+      <section id="academics" style={{ padding: "5rem 2rem", background: "var(--bg-primary)" }}>
+        <div style={{ maxWidth: "1140px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "3.5rem" }}>
+            <span className="badge badge-teal" style={{ marginBottom: "0.75rem" }}>
+              Academic Blueprint 2026-2027
+            </span>
+            <h2 style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>
+              Structured For Deep Conceptual Mastery
+            </h2>
+            <p style={{ color: "var(--text-secondary)", maxWidth: "650px", margin: "0 auto" }}>
+              Our multi-tiered academic framework supports core foundations in secondary school,
+              leading to specialized stream offerings and elective flexibility.
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "2rem" }}>
+            {/* Secondary: Class 9 - 10 */}
+            <div className="glass-panel" style={{ padding: "2.25rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+                <div
+                  style={{
+                    background: "rgba(14, 165, 233, 0.15)",
+                    color: "var(--cyan-400)",
+                    padding: "0.6rem",
+                    borderRadius: "10px",
+                  }}
+                >
+                  <Atom size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1.35rem" }}>Secondary School</h3>
+                  <div style={{ fontSize: "0.85rem", color: "var(--cyan-400)", fontWeight: 600 }}>Class 9 & Class 10</div>
+                </div>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed mb-4">
-                Empowering students with quality education through personalised
-                learning experiences and expert guidance.
+              <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
+                Rigorous core subjects structured around analytical logic, scientific method, and board readiness.
               </p>
-              <p className="text-orange-400 text-sm font-bold italic">
-                &ldquo;Learn Smart. Score Higher.&rdquo;
-              </p>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-widest">
-                Quick Links
-              </h4>
-              <ul className="space-y-3 text-sm">
-                {[
-                  { label: "Our Programs", href: "/#services" },
-                  { label: "Enquiry Form", href: "/enquiry" },
-                  { label: "Student Login", href: "/auth/login" },
-                  { label: "Admin Login", href: "/admin/login" },
-                ].map((link, i) => (
-                  <li key={i}>
-                    <Link
-                      href={link.href}
-                      className="text-slate-400 hover:text-white transition-colors flex items-center gap-2"
-                    >
-                      <ChevronRight className="w-3 h-3 text-[#F97316]" />
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Advanced Mathematics (Derivations & Algebra)
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Integrated Science (Physics, Chemistry, Biology)
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Social Science & Contemporary History
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> English Language & Literary Analysis
+                </li>
               </ul>
             </div>
 
-            {/* Programs */}
-            <div>
-              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-widest">
-                Programs
-              </h4>
-              <ul className="space-y-3 text-sm">
-                {[
-                  "School Education (V–X)",
-                  "Higher Secondary (XI-XII)",
-                  "NEET / JEE Prep",
-                  "Robotics & Computer",
-                  "Home Tuition",
-                ].map((c, i) => (
-                  <li
-                    key={i}
-                    className="text-slate-400 flex items-center gap-2"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#F97316]" />
-                    {c}
-                  </li>
-                ))}
+            {/* Senior Secondary: Science Stream */}
+            <div className="glass-panel" style={{ padding: "2.25rem", border: "1px solid rgba(14, 165, 233, 0.35)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+                <div
+                  style={{
+                    background: "rgba(20, 184, 166, 0.15)",
+                    color: "var(--teal-400)",
+                    padding: "0.6rem",
+                    borderRadius: "10px",
+                  }}
+                >
+                  <Cpu size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1.35rem" }}>Engineering & Pure Science</h3>
+                  <div style={{ fontSize: "0.85rem", color: "var(--teal-400)", fontWeight: 600 }}>Class 11 & Class 12 Stream</div>
+                </div>
+              </div>
+              <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
+                Tailored for future engineers and scientists with direct laboratory immersion and competitive exam preparation.
+              </p>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Physics (Mechanics, Electromagnetism & Optics)
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Chemistry (Organic, Inorganic & Physical)
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Higher Mathematics & Calculus
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Computer Science (Python, Algorithms, Data Structures)
+                </li>
               </ul>
             </div>
 
-            {/* Contact */}
-            <div>
-              <h4 className="text-white font-bold mb-5 text-sm uppercase tracking-widest">
-                Contact Us
-              </h4>
-              <ul className="space-y-4 text-sm">
-                <li className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-[#F97316] flex-shrink-0 mt-0.5" />
-                  <span className="text-slate-400 leading-relaxed">
-                    Millan Pally, Sonarpur
-                    <br />
-                    Kolkata, West Bengal
-                  </span>
+            {/* Senior Secondary: Commerce Stream */}
+            <div className="glass-panel" style={{ padding: "2.25rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
+                <div
+                  style={{
+                    background: "rgba(245, 158, 11, 0.15)",
+                    color: "#fbbf24",
+                    padding: "0.6rem",
+                    borderRadius: "10px",
+                  }}
+                >
+                  <Building size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1.35rem" }}>Commerce & Analytical Economics</h3>
+                  <div style={{ fontSize: "0.85rem", color: "#fbbf24", fontWeight: 600 }}>Class 11 & Class 12 Stream</div>
+                </div>
+              </div>
+              <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem", fontSize: "0.95rem" }}>
+                Bridging commerce with analytical data, quantitative economics, and financial principles.
+              </p>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Accountancy & Financial Statement Analysis
                 </li>
-                <li className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-[#F97316] flex-shrink-0" />
-                  <a href="tel:8902673460" className="text-slate-300 font-bold hover:text-white transition-colors text-base">+91 8902673460</a>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Business Studies & Management Strategy
                 </li>
-                <li className="text-xs font-semibold uppercase tracking-widest text-slate-500">ISO 9001:2015 certified quality processes</li>
-                <li className="flex items-center gap-3">
-                  <Phone className="w-5 h-5 text-[#F97316] flex-shrink-0" />
-                  <a
-                    href="tel:8100567748"
-                    className="text-slate-300 font-bold hover:text-white transition-colors text-base"
-                  >
-                    +91 8100567748
-                  </a>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Micro & Macro Economics with Statistics
+                </li>
+                <li style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
+                  <CheckCircle2 size={16} color="#2dd4bf" /> Applied Mathematics & Financial Modeling
                 </li>
               </ul>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="border-t border-slate-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <p className="text-sm text-slate-500">
-              © {new Date().getFullYear()} 5 Point Education Hub. All rights
-              reserved.
-            </p>
-            <p className="text-sm text-slate-600">
-              Millan Pally, Sonarpur, Kolkata
-            </p>
+      {/* ── Admission & Enquiry Section ── */}
+      <section id="admissions" style={{ padding: "5rem 2rem", background: "var(--bg-space)" }}>
+        <div style={{ maxWidth: "1140px", margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "3rem", alignItems: "center" }}>
+            <div>
+              <span className="badge badge-cyan" style={{ marginBottom: "0.75rem" }}>
+                Admissions 2026-27
+              </span>
+              <h2 style={{ fontSize: "2.5rem", marginBottom: "1.25rem" }}>
+                Take The First Step Toward Academic Excellence
+              </h2>
+              <p style={{ color: "var(--text-secondary)", marginBottom: "2rem", lineHeight: 1.7 }}>
+                We maintain small section sizes (max 40 students) to guarantee individual attention.
+                Submit an online enquiry, and our Admissions Coordinator will contact you within 24 business hours
+                to arrange campus visits and aptitude evaluations.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(14, 165, 233, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--cyan-400)", fontWeight: 700 }}>
+                    1
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>Submit Online Enquiry</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Receive instant reference number and counselor assignment</div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(20, 184, 166, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--teal-400)", fontWeight: 700 }}>
+                    2
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>Counseling & Verification</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Fee structure briefing, document verification & optional scholarship evaluation</div>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(16, 185, 129, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-emerald)", fontWeight: 700 }}>
+                    3
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>Clearance & Enrollment</div>
+                    <div style={{ fontSize: "0.85rem", color: "var(--text-muted)" }}>Instant admission number generation with student portal account provisioning</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Enquiry Form */}
+            <div className="glass-panel" style={{ padding: "2.5rem" }}>
+              <h3 style={{ fontSize: "1.4rem", marginBottom: "0.5rem" }}>Direct Admission Enquiry</h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: "0.88rem", marginBottom: "1.75rem" }}>
+                Fill out the details below to initiate your application.
+              </p>
+
+              {submissionResult?.success ? (
+                <div
+                  style={{
+                    padding: "1.5rem",
+                    borderRadius: "10px",
+                    background: "rgba(16, 185, 129, 0.12)",
+                    border: "1px solid rgba(16, 185, 129, 0.3)",
+                    textAlign: "center",
+                  }}
+                >
+                  <CheckCircle2 size={38} color="#34d399" style={{ margin: "0 auto 0.75rem" }} />
+                  <div style={{ fontWeight: 700, fontSize: "1.1rem", color: "#34d399", marginBottom: "0.5rem" }}>
+                    Enquiry Submitted Successfully!
+                  </div>
+                  <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem", marginBottom: "1rem" }}>
+                    Your Enquiry Number is: <strong style={{ color: "var(--text-primary)" }}>{submissionResult.number}</strong>
+                  </p>
+                  <p style={{ color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                    Our Admissions Office will call you shortly to schedule your campus tour.
+                  </p>
+                  <button
+                    onClick={() => setSubmissionResult(null)}
+                    className="btn-secondary"
+                    style={{ marginTop: "1rem", fontSize: "0.85rem" }}
+                  >
+                    Submit Another Enquiry
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleEnquirySubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  {submissionResult?.error && (
+                    <div style={{ padding: "0.75rem", borderRadius: "8px", background: "rgba(244, 63, 94, 0.15)", color: "#fda4af", fontSize: "0.85rem" }}>
+                      {submissionResult.error}
+                    </div>
+                  )}
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                      Student Full Name *
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      className="input-control"
+                      placeholder="e.g. Aarav Sharma"
+                      value={enquiryForm.studentName}
+                      onChange={(e) => setEnquiryForm({ ...enquiryForm, studentName: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                      Parent / Guardian Name *
+                    </label>
+                    <input
+                      required
+                      type="text"
+                      className="input-control"
+                      placeholder="e.g. Sanjay Sharma"
+                      value={enquiryForm.guardianName}
+                      onChange={(e) => setEnquiryForm({ ...enquiryForm, guardianName: e.target.value })}
+                    />
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                        Phone Number *
+                      </label>
+                      <input
+                        required
+                        type="tel"
+                        className="input-control"
+                        placeholder="e.g. +91 98450 12345"
+                        value={enquiryForm.phone}
+                        onChange={(e) => setEnquiryForm({ ...enquiryForm, phone: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                        Target Grade *
+                      </label>
+                      <select
+                        className="input-control"
+                        value={enquiryForm.classGrade}
+                        onChange={(e) => setEnquiryForm({ ...enquiryForm, classGrade: e.target.value })}
+                      >
+                        <option value="9">Class 9 (Foundation)</option>
+                        <option value="10">Class 10 (Secondary)</option>
+                        <option value="11">Class 11 (Science / Commerce)</option>
+                        <option value="12">Class 12 (Senior Sec)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                      Email Address (Optional)
+                    </label>
+                    <input
+                      type="email"
+                      className="input-control"
+                      placeholder="e.g. parent@example.com"
+                      value={enquiryForm.email}
+                      onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.35rem" }}>
+                      Questions / Notes
+                    </label>
+                    <textarea
+                      rows={2}
+                      className="input-control"
+                      placeholder="Specify stream preference, previous marks, or transportation queries..."
+                      value={enquiryForm.message}
+                      onChange={(e) => setEnquiryForm({ ...enquiryForm, message: e.target.value })}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-primary"
+                    style={{ width: "100%", marginTop: "0.5rem" }}
+                  >
+                    {isSubmitting ? (
+                      "Transmitting..."
+                    ) : (
+                      <>
+                        <Send size={16} /> Submit Admission Enquiry
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer id="contact" style={{ background: "var(--bg-secondary)", borderTop: "1px solid rgba(255, 255, 255, 0.08)", padding: "4rem 2rem 2rem", marginTop: "auto" }}>
+        <div style={{ maxWidth: "1140px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "2.5rem", marginBottom: "3rem" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #0ea5e9, #14b8a6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <GraduationCap size={20} color="#fff" />
+              </div>
+              <div style={{ fontWeight: 800, fontFamily: "var(--font-heading)", fontSize: "1.1rem" }}>
+                5 Point Engineering
+              </div>
+            </div>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", lineHeight: 1.6, marginBottom: "1.25rem" }}>
+              Dedicated to nurturing ethical, rigorous, and technologically empowered leaders of tomorrow.
+            </p>
+            <div style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
+              Affiliation: CBSE Central Board of Secondary Education
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontWeight: 700, fontFamily: "var(--font-heading)", marginBottom: "1rem", color: "var(--text-primary)" }}>
+              Campus Address
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.88rem", color: "var(--text-secondary)" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
+                <MapPin size={16} color="#0ea5e9" style={{ flexShrink: 0, marginTop: "0.2rem" }} />
+                <span>Knowledge Park, Campus Road, Phase II, Electronic City, Bengaluru, Karnataka - 560100</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Phone size={16} color="#0ea5e9" /> +91 80 2345 6789
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <Mail size={16} color="#0ea5e9" /> contact@5point-engineering.edu.in
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontWeight: 700, fontFamily: "var(--font-heading)", marginBottom: "1rem", color: "var(--text-primary)" }}>
+              Governance & Policies
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.88rem", color: "var(--text-secondary)" }}>
+              <span>• Fee Transparency Ledger</span>
+              <span>• Merit Scholarship Guidelines</span>
+              <span>• Student Code of Conduct</span>
+              <span>• Grievance & Redressal Cell</span>
+              <span>• Anti-Ragging Committee</span>
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontWeight: 700, fontFamily: "var(--font-heading)", marginBottom: "1rem", color: "var(--text-primary)" }}>
+              Institutional Portal
+            </div>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "1rem" }}>
+              Secure portal access for enrolled students, subject teachers, department in-charges, and school leadership.
+            </p>
+            <Link href="/auth/login" className="btn-primary" style={{ width: "100%", fontSize: "0.9rem" }}>
+              <Lock size={15} /> Access Portal
+            </Link>
+          </div>
+        </div>
+
+        <div style={{ maxWidth: "1140px", margin: "0 auto", borderTop: "1px solid rgba(255, 255, 255, 0.05)", paddingTop: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "var(--text-muted)", flexWrap: "wrap", gap: "1rem" }}>
+          <div>© 2026 5 Point Engineering High School. All rights reserved.</div>
+          <div>Timezone: Asia/Kolkata (IST) • Standard Currency: INR (₹)</div>
         </div>
       </footer>
     </div>
